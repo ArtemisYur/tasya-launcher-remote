@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link id="favicon" rel="icon" href="/icon_dark/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#e91e63">
+  <link rel="apple-touch-icon" href="icon_dark/apple-touch-icon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <title>TasyaLauncher Remote</title>
+  <style>
+    :root {
+        --accent: #e91e63;
+        --accent_alt: #00bcd4;
+        --button-radius: 25px; 
+        --interactive-purple: #8B5CF6;
+        --interactive-purple-light: #A78BFA;
+        --interactive-amber: #F59E0B;
+        --interactive-amber-light: #FBBF24;
+        --success-color: #10B981;
+        --danger-color: #EF4444;
+        --tone0: #252522;
+        --tone1: #4a4843;
+        --tone3: #8f8b81;
+        --tone4: #b5b1a4;
+    }
+
+    [data-theme="light"] {
+        --background: #f0f2f5;
+        --fontg: #000000;
+        --section-bg: rgba(255, 255, 255, 0.6);
+        --section-border: rgba(255, 255, 255, 0.9);
+        --modal-bg: rgba(250, 250, 250, 0.7);
+        --top-bar-bg: linear-gradient(to right, var(--accent), var(--accent_alt));
+        --theme_button: transparent;
+        --theme_button_hover: var(--accent);
+        --now_playing: var(--accent);
+        --dir_input_bg: rgba(0,0,0,0.05);
+        --dir_input_focus_bg: rgba(0,0,0,0.08);
+        --dir_input_border: var(--accent_alt);
+        --dir_save_button: linear-gradient(135deg, var(--accent), #ff79c6);
+        --dir_save_button_hover: linear-gradient(135deg, var(--interactive-amber), var(--interactive-amber-light));
+        --quick_access_randchoice: linear-gradient(135deg, var(--accent), #ff79c6);
+        --quick_access_randchoice_hover: linear-gradient(135deg, var(--accent_alt), #83eaf1);
+        --category_tag: linear-gradient(135deg, var(--accent_alt), #83eaf1);
+        --category_tag_hover: linear-gradient(135deg, var(--accent), #ff79c6);
+        --category_tag_active: linear-gradient(135deg, var(--accent), #ff79c6);
+        --file_tag: linear-gradient(135deg, var(--interactive-purple), var(--interactive-purple-light));
+        --file_tag_hover: linear-gradient(135deg, var(--interactive-amber), var(--interactive-amber-light));
+        --file_tag_action: var(--success-color);
+        --pin-bg: rgba(0,0,0,0.15);
+        --pin-hover-bg: var(--danger-color);
+    }
+    
+    [data-theme="dark"] {
+        --background: var(--tone0);
+        --fontg: #ffffff;
+        --section-bg: rgba(40, 40, 34, 0.5);
+        --section-border: rgba(255, 255, 255, 0.1);
+        --modal-bg: rgba(50, 50, 45, 0.8);
+        --top-bar-bg: linear-gradient(to right, var(--accent), var(--accent_alt));
+        --theme_button: transparent;
+        --theme_button_hover: var(--accent_alt);
+        --now_playing: var(--accent_alt);
+        --dir_input_bg: rgba(255,255,255,0.1);
+        --dir_input_focus_bg: rgba(255,255,255,0.15);
+        --dir_input_border: var(--accent);
+        --dir_save_button: linear-gradient(135deg, var(--accent_alt), #83eaf1);
+        --dir_save_button_hover: linear-gradient(135deg, var(--interactive-amber), var(--interactive-amber-light));
+        --quick_access_randchoice: linear-gradient(135deg, var(--accent), #ff79c6);
+        --quick_access_randchoice_hover: linear-gradient(135deg, var(--accent_alt), #83eaf1);
+        --category_tag: linear-gradient(135deg, var(--accent_alt), #83eaf1);
+        --category_tag_hover: linear-gradient(135deg, var(--accent), #ff79c6);
+        --category_tag_active: linear-gradient(135deg, var(--accent), #ff79c6);
+        --file_tag: linear-gradient(135deg, var(--interactive-purple), var(--interactive-purple-light));
+        --file_tag_hover: linear-gradient(135deg, var(--interactive-amber), var(--interactive-amber-light));
+        --file_tag_action: var(--success-color);
+        --pin-bg: rgba(255,255,255,0.2);
+        --pin-hover-bg: var(--danger-color);
+    }
+    
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--background);
+      color: var(--fontg);
+      margin: 0;
+      min-height: 100vh;
+      transition: background 0.3s ease, color 0.3s ease;
+      overflow-x: hidden;
+    }
+    body.modal-open { overflow: hidden; }
+
+    /* --- Фоновая анимация --- */
+    @property --a { syntax: "<angle>"; initial-value: 0deg; inherits: true; }
+    #background-animation {
+      position: fixed; top: 0; left: 0;
+      width: 100vw; height: 100vh; display: flex;
+      --count: 24; --size: 140deg;
+      animation: bg-main 12s cubic-bezier(0.83,-0.49, 0.15, 1.84) infinite;
+      z-index: -2;
+    }
+    @keyframes bg-main { from { --a: 0deg; } to { --a: 360deg; } }
+    #background-animation .bg-col {
+      flex: 1;
+      --a-per-item: calc(var(--size) / var(--count) * var(--i) - var(--a));
+      --pos1: calc(50% * cos(var(--a-per-item)));
+      background: linear-gradient( to bottom, var(--accent), var(--accent_alt) var(--pos1), #03072c 50%, var(--accent_alt) calc(100% - var(--pos1)), var(--accent) );
+    }
+    body::after {
+        content: ""; opacity: .5; position: fixed;
+        background: url(noise.svg);
+        mix-blend-mode: screen; inset: 0;
+        pointer-events: none; z-index: -1;
+        filter: invert(1) brightness(1.5) saturate(.5);
+    }
+    @media (max-width: 768px) { #background-animation { --count: 12; } }
+
+    /* --- Основные стили --- */
+    .section {
+      background: var(--section-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--section-border); padding: 1.5em; margin: 1em;
+      border-radius: calc(var(--button-radius) + 4px); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+    }
+    #now-playing-section { border-radius: 50px; text-align: center; }
+    #now-playing { font-style: italic; color: var(--now_playing); font-weight: bold; }
+    input[type="text"], button { -webkit-tap-highlight-color: transparent; }
+    input {
+        padding: 0.8em; border-radius: var(--button-radius);
+        border: 2px solid transparent; background-color: var(--dir_input_bg);
+        color: var(--fontg); transition: all 0.3s; width: 100%; box-sizing: border-box;
+    }
+    input:focus { outline: none; border-color: var(--dir_input_border); background-color: var(--dir_input_focus_bg); }
+    button { padding: 0.8em 1.5em; border: none; border-radius: var(--button-radius); cursor: pointer; font-weight: bold; transition: all 0.3s ease; }
+    #dir-controls button { background: var(--dir_save_button); color: white; width: 100%;}
+    #dir-controls button:hover { background: var(--dir_save_button_hover); color: var(--tone0); }
+    #random-btn { background: var(--quick_access_randchoice); color: white; }
+    #random-btn:hover { background: var(--quick_access_randchoice_hover); }
+
+    .pc-menu, .mobile-menu { display: none; }
+    .pc-interface .pc-menu { display: flex; }
+    .pc-interface #scrollToTopBtn { display: flex; }
+    .mobile-interface .mobile-menu { display: block; }
+    
+    .top-bar {
+      justify-content: space-between; align-items: center; padding: 10px 20px; color: white;
+      background: var(--top-bar-bg); box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      position: sticky; top: 0; z-index: 1000;
+    }
+    .top-bar__left { display: flex; align-items: center; gap: 15px; }
+    .top-bar__icon { height: 40px; width: auto; }
+    .top-bar__title { font-size: 1.5em; font-weight: bold; }
+    .top-bar__button { border: 2px solid white; background: var(--theme_button); color: white; }
+    .top-bar__button:hover { background: var(--theme_button_hover); border-color: transparent; }
+    .pc-menu-items button { background: none; border: none; color: white; opacity: 0.8; font-size: 1.2em; padding: 0.5em; }
+    .pc-menu-items button:hover { opacity: 1; color: var(--accent_alt); }
+
+    #dir-controls { display: flex; align-items: center; gap: 0.5em; }
+    @media (max-width: 768px) { #dir-controls { flex-direction: column; align-items: stretch; gap: 0.8em; } }
+    
+    .tag-container { display: flex; flex-wrap: wrap; gap: 10px; }
+    .tag-btn {
+      display: flex; align-items: center; height: 40px; padding: 0 1.5em; border-radius: var(--button-radius);
+      cursor: pointer; overflow: hidden; transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+      flex-grow: 1; flex-shrink: 1; flex-basis: 180px; min-width: 150px; justify-content: center;
+      border: 1px solid transparent; color: white;
+    }
+    .tag-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .tag-category { background: var(--category_tag); color: var(--fontg) !important; }
+    .tag-category:hover { background: var(--category_tag_hover); color: white !important; }
+    .tag-category.active { background: var(--category_tag_active); color: white !important; box-shadow: inset 0 3px 5px rgba(0,0,0,0.25); transform: translateY(1px); }
+    .tag-file { background: var(--file_tag); }
+    .tag-file:hover, .tag-file.expanded { background: var(--file_tag_hover); color: var(--tone0); border-color: rgba(0,0,0,0.4); }
+    .tag-btn.flash { background: var(--file_tag_action) !important; transform: scale(1.02); }
+    .pin-btn { display: none; margin-left: auto; background: none; border: none; cursor: pointer; padding: 0 0 0 10px; height: 100%; align-items: center; }
+    .pin-btn-circle { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; font-size: 16px; background-color: var(--pin-bg); transition: all 0.2s ease; }
+    .pin-btn:hover .pin-btn-circle { background-color: var(--pin-hover-bg); transform: scale(1.1); }
+    .tag-file:hover .pin-btn, .tag-file.expanded .pin-btn { display: flex; }
+    
+    #scrollToTopBtn {
+        display: none; position: fixed; bottom: 25px; right: 25px; z-index: 1001; width: 50px; height: 50px;
+        font-size: 24px; border-radius: 50%; background-color: var(--accent); color: white; padding: 0;
+        justify-content: center; align-items: center; -webkit-tap-highlight-color: transparent;
+    }
+    #scrollToTopBtn:hover { background-color: var(--accent_alt); }
+
+    /* --- Новое горизонтальное Gooey-меню --- */
+    .mobile-menu {
+        position: fixed;
+        bottom: 0;
+        left: 70%;
+        width: 100%;
+        height: 120px; /* Высота области видимости меню */
+        z-index: 2000;
+        pointer-events: none;
+    }
+    .menu-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        filter: url('#goo');
+        display: flex;
+        align-items: flex-end; /* Выравнивание по низу */
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    .menu-open-button {
+        background: var(--accent);
+        border-radius: 100%;
+        width: 70px;
+        height: 70px;
+        position: relative;
+        color: white;
+        text-align: center;
+        line-height: 70px;
+        transform: translate3d(0, 0, 0);
+        transition: transform ease-out 200ms;
+        pointer-events: auto;
+        cursor: pointer;
+        z-index: 2; /* Важно */
+        flex-shrink: 0;
+    }
+    .menu-open-button:hover { transform: scale(1.1, 1.1); }
+    .menu-item {
+        background: var(--accent);
+        border-radius: 100%;
+        width: 60px;
+        height: 60px;
+        position: absolute;
+        bottom: 20%; /* Та же позиция что и у основной кнопки */
+        left: 6%;
+        color: white;
+        text-align: center;
+        line-height: 60px;
+        transform: translate3d(0, 0, 0);
+        transition: transform ease-out 200ms;
+        pointer-events: auto;
+    }
+    .menu-item:hover { background: var(--accent_alt); }
+    .menu-open { display: none; }
+    .menu-open:checked + .menu-container .menu-open-button { transform: scale(0.9, 0.9); }
+    .menu-open:checked + .menu-container .menu-item {
+        transition-timing-function: cubic-bezier(0.165, 0.840, 0.440, 1.000);
+    }
+    .menu-open:checked + .menu-container .menu-item:nth-child(2) { transition-duration: 180ms; transform: translate3d(-65px, 0, 0); }
+    .menu-open:checked + .menu-container .menu-item:nth-child(3) { transition-duration: 280ms; transform: translate3d(-130px, 0, 0); }
+    .menu-open:checked + .menu-container .menu-item:nth-child(4) { transition-duration: 380ms; transform: translate3d(-195px, 0, 0); }
+    .menu-open:checked + .menu-container .menu-item:nth-child(5) { transition-duration: 480ms; transform: translate3d(-260px, 0, 0); }
+    
+    .hamburger { width: 25px; height: 3px; background: white; display: block; position: absolute; top: 50%; left: 50%; margin-left: -12.5px; margin-top: -1.5px; transition: transform 200ms; }
+    .hamburger-1 { transform: translate3d(0,-8px,0); } .hamburger-2 { transform: translate3d(0,0,0); } .hamburger-3 { transform: translate3d(0,8px,0); }
+    .menu-open:checked + .menu-container .hamburger-1 { transform: translate3d(0,0,0) rotate(45deg); }
+    .menu-open:checked + .menu-container .hamburger-2 { transform: translate3d(0,0,0) scale(0.1,1); }
+    .menu-open:checked + .menu-container .hamburger-3 { transform: translate3d(0,0,0) rotate(-45deg); }
+    .hidden-svg { position: absolute; width: 0; height: 0; }
+
+    /* --- Система модальных окон (iOS Style) --- */
+    #modal-backdrop {
+        position: fixed; inset: 0;
+        background-color: rgba(0,0,0,0.6);
+        opacity: 0; visibility: hidden;
+        transition: opacity 0.4s ease; z-index: 3000;
+    }
+    #modal-backdrop.visible { opacity: 1; visibility: visible; }
+    
+    .modal-outer-container {
+      position: fixed; inset: 0; z-index: 3001;
+      display: flex; justify-content: center;
+      align-items: flex-end; /* Mobile-first: align to bottom */
+      pointer-events: none;
+    }
+    .pc-interface .modal-outer-container { align-items: center; }
+
+    #modal-container {
+        width: min(100% - 1.5rem, 700px);
+        max-height: 800vh;
+        background: var(--modal-bg);
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--section-border);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        display: flex; flex-direction: column;
+        opacity: 0; visibility: hidden;
+        transition: opacity 0.4s ease, transform 0.4s ease, visibility 0s 0.4s;
+        transform: translateY(100%);
+        pointer-events: auto;
+        border-radius: 1.5rem 1.5rem 0 0;
+    }
+    .pc-interface #modal-container {
+        border-radius: 1.5rem; max-height: 80vh;
+        transform: translateY(0) scale(0.95);
+    }
+    #modal-container.visible { 
+        opacity: 1; visibility: visible;
+        transform: translateY(0);
+        transition: opacity 0.4s ease, transform 0.4s ease, visibility 0s;
+    }
+    .pc-interface #modal-container.visible { transform: translateY(0) scale(1); }
+    
+    #modal-header { padding: 15px; text-align: center; position: relative; flex-shrink: 0; cursor: grab; }
+    #modal-handle-mobile {
+        margin: 0 auto; width: 50px; height: 6px; background-color: var(--fontg);
+        opacity: 0.4; border-radius: 5px;
+    }
+    .pc-interface #modal-header { cursor: default; }
+    .pc-interface #modal-handle-mobile { display: none; }
+
+    #modal-close-btn-pc {
+        position: absolute; top: 10px; right: 10px;
+        width: 30px; height: 30px; border-radius: 50%;
+        background-color: rgba(0,0,0,0.2); color: var(--fontg);
+        border: none; padding: 0; font-size: 20px; line-height: 30px;
+        cursor: pointer; display: none;
+    }
+    .pc-interface #modal-close-btn-pc { display: flex; align-items: center; justify-content: center; }
+    #modal-close-btn-pc:hover { background-color: var(--danger-color); color: white; }
+    
+    #modal-content { overflow-y: auto; padding: 0 1.5em 1.5em; }
+
+    /* --- Стили для модала Оценки --- */
+    .rating-form { font-size: 2rem; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+    .rating__stars { display: flex; }
+    .rating__label { cursor: pointer; padding: 0.125em; }
+    .rating__star { display: block; overflow: visible; width: 2em; height: 2em; pointer-events: none; }
+    .rating__star-ring, .rating__star-fill, .rating__star-line, .rating__star-stroke { animation-duration: 1s; animation-timing-function: ease-in-out; animation-fill-mode: forwards; }
+    .rating__star-ring, .rating__star-fill, .rating__star-line { stroke: var(--interactive-amber); }
+    .rating__star-fill { fill: var(--interactive-amber); transform: scale(0); transition: fill 0.3s, transform 0.3s; }
+    .rating__star-line { stroke-dasharray: 12 13; stroke-dashoffset: -13; }
+    .rating__star-stroke { stroke: var(--fontg); opacity: 0.5; transition: stroke 0.3s; }
+    .rating__input { position: absolute; -webkit-appearance: none; appearance: none; }
+    .rating__input:hover ~ .rating__label .rating__star-stroke,
+    .rating__input:checked ~ .rating__label .rating__star-stroke { stroke: var(--interactive-amber); }
+    .rating__input:checked ~ .rating__label .rating__star-ring { animation-name: starRing; }
+    .rating__input:checked ~ .rating__label .rating__star-stroke { animation-name: starStroke; }
+    .rating__input:checked ~ .rating__label .rating__star-line { animation-name: starLine; }
+    .rating__input:checked ~ .rating__label .rating__star-fill { animation-name: starFill; }
+    .rating-form p { margin-top: 1em; font-size: 1rem; font-weight: bold; color: var(--interactive-amber); }
+    @keyframes starRing {from,20% {animation-timing-function: ease-in; opacity: 1; r: 8px; stroke-width: 16px; transform: scale(0);} 35% {animation-timing-function: ease-out; opacity: 0.5; r: 8px; stroke-width: 16px; transform: scale(1);} 50%,to {opacity: 0; r: 16px; stroke-width: 0; transform: scale(1);}}
+    @keyframes starFill {from,40% {animation-timing-function: ease-out; transform: scale(0);} 60% {animation-timing-function: ease-in-out; transform: scale(1.2);} 80% {transform: scale(0.9);} to {transform: scale(1);}}
+    @keyframes starStroke {from {transform: scale(1);} 20%,to {transform: scale(0);}}
+    @keyframes starLine {from,40% {animation-timing-function: ease-out; stroke-dasharray: 1 23; stroke-dashoffset: 1;} 60%,to {stroke-dasharray: 12 13; stroke-dashoffset: -13;}}
+
+  </style>
+</head>
+<body>
+    <div id="background-animation"></div>
+    <header class="pc-menu top-bar">
+        <div class="top-bar__left">
+            <img src="/icon_dark/tv-app.png" id="banner" class="top-bar__icon" alt="TasyaLauncher banner">
+            <span class="top-bar__title">ТАСЯ</span>
+        </div>
+        <div class="pc-menu-items">
+          <button onclick="openModal('rating')" title="Оценить"><i class="fa fa-star"></i></button>
+          <button onclick="openModal('bg_theme')" title="Фоновая тема"><i class="fa fa-picture-o"></i></button>
+          <button onclick="openModal('logs')" title="Логи/Настройки"><i class="fa fa-cogs"></i></button>
+          <button onclick="toggleTheme()" title="Сменить тему"><i class="fa fa-lightbulb-o"></i></button>
+        </div>
+    </header>
+    <main id="main-content">
+        <div id="now-playing-section" class="section">
+            <span id="now-playing">🎵 В данный момент ничего не воспроизводится.</span>
+        </div>
+        <div class="section">
+            <div id="dir-controls">
+                <label for="dirInput">📂 Путь к папке:</label>
+                <input type="text" id="dirInput" placeholder="C:/path/to/videos">
+                <button onclick="setDirectory()">Сохранить</button>
+            </div>
+        </div>
+        <div class="section" id="quick-access">
+            <h2>⚡ Быстрый доступ</h2>
+            <div id="random-btn-container" style="margin-bottom: 1em;">
+                <button id="random-btn" onclick="playRandom()">🎲 Рандомный выбор</button>
+            </div>
+            <div id="favorites-container" class="tag-container"></div>
+        </div>
+        <div class="section" id="category-section">
+          <h2>Категории</h2>
+          <div id="category-tags" class="tag-container"></div>
+        </div>
+        <div class="section" id="file-section">
+          <h2 id="file-list-header">Файлы</h2>
+          <div id="file-list" class="tag-container">
+              <p>Выберите категорию, чтобы увидеть список файлов.</p>
+          </div>
+        </div>
+    </main>
+
+    <nav class="mobile-menu">
+      <input type="checkbox" class="menu-open" name="menu-open" id="menu-open"/>
+      <div class="menu-container">
+          <label class="menu-open-button" for="menu-open">
+            <span class="hamburger hamburger-1"></span><span class="hamburger hamburger-2"></span><span class="hamburger hamburger-3"></span>
+          </label>
+            <a href="#" class="menu-item" onclick="scrollToTopAndCloseMenu()" title="Наверх"><i class="fa fa-arrow-up"></i></a>
+
+          <a href="#" class="menu-item" onclick="openModal('rating')" title="Оценить"><i class="fa fa-star"></i></a>
+          <a href="#" class="menu-item" onclick="openModal('bg_theme')" title="Темы"><i class="fa fa-picture-o"></i></a>
+          <a href="#" class="menu-item" onclick="openModal('logs')" title="Настройки"><i class="fa fa-cogs"></i></a>
+      </div>
+    </nav>
+    <svg class="hidden-svg"><defs><filter id="goo"><feGaussianBlur in="SourceGraphic" result="blur" stdDeviation="10" /><feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" /><feComposite in2="goo" in="SourceGraphic" result="mix" /></filter></defs></svg>
+    
+    <button id="scrollToTopBtn" onclick="scrollToTop()" title="Наверх">↑</button>
+    <div id="modal-backdrop"></div>
+    <div class="modal-outer-container">
+        <div id="modal-container">
+            <div id="modal-header">
+                <div id="modal-handle-mobile"></div>
+                <button id="modal-close-btn-pc" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+    
+    <template id="modal-template-rating">
+        <form class="rating-form">
+            <h2>Оценка/Отзыв</h2>
+            <div class="rating__stars">
+                <input id="rating-1" class="rating__input" type="radio" name="rating" value="1"><label class="rating__label" for="rating-1"><svg class="rating__star" width="32" height="32" viewBox="0 0 32 32"><g transform="translate(16,16)"><circle class="rating__star-ring" r="8" /></g><g stroke-width="2"><g transform="translate(16,16) rotate(180)"><polygon class="rating__star-stroke" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" /><polygon class="rating__star-fill" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" /></g><g transform="translate(16,16)"><polyline class="rating__star-line" transform="rotate(0)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(72)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(144)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(216)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(288)" points="0 4,0 16" /></g></g></svg></label>
+                <input id="rating-2" class="rating__input" type="radio" name="rating" value="2"><label class="rating__label" for="rating-2"><svg class="rating__star" width="32" height="32" viewBox="0 0 32 32"><g transform="translate(16,16)"><circle class="rating__star-ring" r="8" /></g><g stroke-width="2"><g transform="translate(16,16) rotate(180)"><polygon class="rating__star-stroke" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" /><polygon class="rating__star-fill" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" /></g><g transform="translate(16,16)"><polyline class="rating__star-line" transform="rotate(0)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(72)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(144)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(216)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(288)" points="0 4,0 16" /></g></g></svg></label>
+                <input id="rating-3" class="rating__input" type="radio" name="rating" value="3"><label class="rating__label" for="rating-3"><svg class="rating__star" width="32" height="32" viewBox="0 0 32 32"><g transform="translate(16,16)"><circle class="rating__star-ring" r="8" /></g><g stroke-width="2"><g transform="translate(16,16) rotate(180)"><polygon class="rating__star-stroke" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" /><polygon class="rating__star-fill" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" /></g><g transform="translate(16,16)"><polyline class="rating__star-line" transform="rotate(0)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(72)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(144)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(216)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(288)" points="0 4,0 16" /></g></g></svg></label>
+                <input id="rating-4" class="rating__input" type="radio" name="rating" value="4"><label class="rating__label" for="rating-4"><svg class="rating__star" width="32" height="32" viewBox="0 0 32 32"><g transform="translate(16,16)"><circle class="rating__star-ring" r="8" /></g><g stroke-width="2"><g transform="translate(16,16) rotate(180)"><polygon class="rating__star-stroke" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" /><polygon class="rating__star-fill" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" /></g><g transform="translate(16,16)"><polyline class="rating__star-line" transform="rotate(0)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(72)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(144)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(216)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(288)" points="0 4,0 16" /></g></g></svg></label>
+                <input id="rating-5" class="rating__input" type="radio" name="rating" value="5"><label class="rating__label" for="rating-5"><svg class="rating__star" width="32" height="32" viewBox="0 0 32 32"><g transform="translate(16,16)"><circle class="rating__star-ring" r="8" /></g><g stroke-width="2"><g transform="translate(16,16) rotate(180)"><polygon class="rating__star-stroke" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" /><polygon class="rating__star-fill" points="0,15 4.41,6.07 14.27,4.64 7.13,-2.32 8.82,-12.14 0,-7.5 -8.82,-12.14 -7.13,-2.32 -14.27,4.64 -4.41,6.07" /></g><g transform="translate(16,16)"><polyline class="rating__star-line" transform="rotate(0)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(72)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(144)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(216)" points="0 4,0 16" /><polyline class="rating__star-line" transform="rotate(288)" points="0 4,0 16" /></g></g></svg></label>
+            </div>
+            <p id="rating-display"></p>
+        </form>
+    </template>
+    <template id="modal-template-logs"><h2>Логи/Настройки</h2><p>Здесь будет ввод пароля и отображение логов/настроек.</p></template>
+    <template id="modal-template-bg_theme">
+        <h2>Темы</h2>
+        <p>Здесь будет выбор фоновых тем в виде капельного меню.</p>
+        <button onclick="toggleTheme()">Переключить Светлую/Темную</button>
+    </template>
+
+    <script>
+    /* // --- Глобальная инициализация --- */
+    document.addEventListener('DOMContentLoaded', () => {
+        setupInterface();
+        initApp();
+        setupModalSystem();
+    });
+    
+    /* // --- Основная логика приложения (без изменений) --- */
+    async function initApp(){loadTheme();if(isMobile){document.addEventListener('click',handleGlobalClick,true)}try{const config=await apiCall('/api/config/video_dir');if(config?.video_dir){document.getElementById('dirInput').value=config.video_dir;await fetchAndDisplayContent()}await loadFavorites()}catch(error){console.error("Ошибка инициализации:",error);document.getElementById('file-list').innerHTML='<p>Не удалось подключиться к серверу. Убедитесь, что он запущен.</p>'}}
+    let categoriesData={},favorites=[],expandedTag=null;
+    const API_BASE = "https://shoulder-around-communist-broader.trycloudflare.com/"
+    const nowPlayingEl=document.getElementById('now-playing');
+    const categoryTagsContainer=document.getElementById('category-tags');
+    const fileListContainer=document.getElementById('file-list');
+    const fileListHeader=document.getElementById('file-list-header');
+    const favoritesContainer=document.getElementById('favorites-container');
+    
+    async function apiCall(url,options={API_BASE}){const config={method:'GET',headers:{'Content-Type':'application/json'},... options}; if(config.body&&typeof config.body!=='string'){config.body=JSON.stringify(config.body)}try{const response=await fetch(url,config);if(!response.ok){const errorData=await response.json().catch(()=>({message:`HTTP ошибка! Статус: ${response.status}`}));throw new Error(errorData.message||'Неизвестная ошибка сети')}return response.text().then(text=>text?JSON.parse(text):{})}catch(error){console.error(`Ошибка API запроса: ${url}`,error);throw error}}
+    async function loadFavorites(){try{const data=await apiCall('/api/favorites');favorites=data.favorites||[];renderFavorites()}catch(error){console.error("Не удалось загрузить избранное:",error)}}
+    async function toggleFavorite(category,file,isCurrentlyFavorite,event){event.stopPropagation();flashTag(event.currentTarget.closest('.tag-btn'));const endpoint=isCurrentlyFavorite?'/api/favorites/remove':'/api/favorites/add';const body={file};if(!isCurrentlyFavorite){body.category=category}try{await apiCall(endpoint,{method:'POST',body:body});await loadFavorites();const activeCategory=document.querySelector('.tag-category.active')?.title;if(activeCategory){displayFiles(activeCategory)}}catch(error){console.error("Ошибка при изменении избранного:",error)}}
+    function renderFavorites(){favoritesContainer.innerHTML='';if(favorites.length>0){favorites.forEach(({category,file})=>{const btn=createFileTag(category,file,true);favoritesContainer.appendChild(btn)})}else{favoritesContainer.innerHTML='<p style="font-size: 0.9em; opacity: 0.7;">Здесь будут закрепленные файлы.</p>'}}
+    function createTag(text,className){const btn=document.createElement('button');btn.className=`tag-btn ${className}`;btn.title=text;btn.innerHTML=`<span class="tag-text">${text}</span>`;return btn}
+    function createFileTag(category,file,isFavorite){const btn=createTag(file,'tag-file');const pinIcon=isFavorite?'💔':'📌';const pinTitle=isFavorite?'Открепить':'Закрепить';const pinBtn=document.createElement('button');pinBtn.className='pin-btn';pinBtn.title=pinTitle;pinBtn.innerHTML=`<span class="pin-btn-circle">${pinIcon}</span>`;pinBtn.onclick=(e)=>toggleFavorite(category,file.replace(/'/g,"\\'"),isFavorite,e);btn.appendChild(pinBtn);btn.addEventListener('click',(e)=>{if(!pinBtn.contains(e.target)){if(isMobile){handleFileTagClick(e,category,file)}else{flashTag(btn);playVideo(category,file)}}});return btn}
+    async function fetchAndDisplayContent(){try{categoriesData=await apiCall('/api/categories');const categories=Object.keys(categoriesData);categoryTagsContainer.innerHTML='';if(categories.length>0){categories.forEach(cat=>{const btn=createTag(cat,'tag-category');btn.onclick=()=>displayFiles(cat);categoryTagsContainer.appendChild(btn)});displayFiles(categories[0])}}catch(error){console.error("Ошибка загрузки категорий:",error);fileListContainer.innerHTML='<p>Ошибка загрузки категорий с сервера.</p>'}}
+    function displayFiles(category){if(!category||!categoriesData[category])return;resetExpandedState();const files=categoriesData[category];fileListContainer.innerHTML='';fileListHeader.textContent=`Файлы в категории «${category}»`;document.querySelectorAll('.tag-category').forEach(btn=>{btn.classList.toggle('active',btn.title===category)});files.forEach(file=>{const isFav=favorites.some(fav=>fav.file===file);const btn=createFileTag(category,file,isFav);fileListContainer.appendChild(btn)})}
+    function handleFileTagClick(event,category,file){event.preventDefault();event.stopPropagation();const clickedTag=event.currentTarget;if(clickedTag.classList.contains('expanded')){flashTag(clickedTag);playVideo(category,file);resetExpandedState()}else{resetExpandedState();clickedTag.classList.add('expanded');expandedTag=clickedTag}}
+    function resetExpandedState(){if(expandedTag){expandedTag.classList.remove('expanded');expandedTag=null}}
+    function handleGlobalClick(event){if(expandedTag&&!expandedTag.contains(event.target)){resetExpandedState()}}
+    function flashTag(tagElement){if(!tagElement)return;tagElement.classList.add('flash');setTimeout(()=>{tagElement.classList.remove('flash')},300)}
+    async function playVideo(category,file){try{await apiCall(`/api/play/${category}/${file}`);updateNowPlaying(file)}catch(error){console.error("Ошибка воспроизведения:",error)}}
+    async function playRandom(){flashTag(document.getElementById('random-btn'));try{const data=await apiCall('/api/play/random');if(data?.filename){updateNowPlaying(data.filename)}}catch(error){console.error("Ошибка случайного воспроизведения:",error)}}
+    function updateNowPlaying(file){nowPlayingEl.textContent=`▶️ Сейчас играет: ${file}`}
+    async function setDirectory(){const path=document.getElementById('dirInput').value;try{await apiCall('/api/config/video_dir',{method:'POST',body:{path}});await fetchAndDisplayContent()}catch(error){console.error("Ошибка установки директории:",error)}}
+    function toggleTheme(){const html=document.documentElement;const newTheme=html.getAttribute('data-theme')==='light'?'dark':'light';html.setAttribute('data-theme',newTheme);localStorage.setItem('theme',newTheme);applyTheme(newTheme)}
+    function applyTheme(theme){document.getElementById('favicon').href=theme==='dark'?'/icon_dark/icon-192.png':'/icon_light/icon-192.png';document.getElementById('banner').src=theme==='dark'?'/icon_dark/tv-app.png':'/icon_light/tv-app.png'}
+    function loadTheme(){const savedTheme=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',savedTheme);applyTheme(savedTheme)}
+    const scrollToTop=()=>window.scrollTo({top:0,behavior:'smooth'});
+    function closeMobileMenu() { document.getElementById('menu-open').checked = false; }
+    function scrollToTopAndCloseMenu() { scrollToTop(); closeMobileMenu(); }
+    function toggleThemeAndCloseMenu() { toggleTheme(); closeMobileMenu(); }
+
+    /* // --- Переписанная логика модальных окон и плеера --- */
+    let isMobile = false;
+    
+    function setupInterface() {
+        const isTouchCapable = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        const isMobileAgent = /Android|iPhone|iPad|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        isMobile = isTouchCapable && isMobileAgent;
+        document.body.className = isMobile ? 'mobile-interface' : 'pc-interface';
+        const bgContainer = document.getElementById('background-animation');
+        const colCount = isMobile ? 12 : 24;
+        for (let i = 0; i < colCount; i++) {
+            const col = document.createElement('div');
+            col.className = 'bg-col';
+            col.style.setProperty('--i', i);
+            bgContainer.appendChild(col);
+        }
+        if (!isMobile) {
+            window.onscroll = () => {
+                const btn = document.getElementById('scrollToTopBtn');
+                if (btn) btn.style.display = (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) ? "flex" : "none";
+            };
+        }
+    }
+
+    let activeModal = null;
+    let modalTouchStartY = 0;
+    let isDragging = false;
+    
+    function setupModalSystem() {
+        const backdrop = document.getElementById('modal-backdrop');
+        const modalContainer = document.getElementById('modal-container');
+        const modalHandle = document.getElementById('modal-header');
+
+        backdrop.addEventListener('click', closeModal);
+        
+        modalHandle.addEventListener('touchstart', (e) => {
+            if (!isMobile) return;
+            isDragging = true;
+            modalTouchStartY = e.touches[0].clientY;
+            modalContainer.style.transition = 'none';
+        }, { passive: true });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging || !isMobile) return;
+            const currentY = e.touches[0].clientY;
+            let diff = currentY - modalTouchStartY;
+            if (diff < 0) diff = 0; // Prevent dragging up
+            modalContainer.style.transform = `translateY(${diff}px)`;
+        }, { passive: true });
+
+        document.addEventListener('touchend', () => {
+            if (!isDragging || !isMobile) return;
+            isDragging = false;
+            const modalRect = modalContainer.getBoundingClientRect();
+            modalContainer.style.transition = 'transform 0.4s ease';
+            // If dragged more than 30% of its height, close
+            if (modalRect.top > window.innerHeight * 0.4) {
+                closeModal();
+            } else {
+                modalContainer.style.transform = 'translateY(0)';
+            }
+        });
+    }
+
+    function openModal(modalId) { 
+        closeMobileMenu();
+        const template = document.getElementById(`modal-template-${modalId}`);
+        if (!template) return console.error(`Шаблон для модала ${modalId} не найден!`);
+
+        document.getElementById('modal-content').innerHTML = template.innerHTML;
+        document.getElementById('modal-backdrop').classList.add('visible');
+        document.getElementById('modal-container').classList.add('visible');
+        document.body.classList.add('modal-open');
+        
+        activeModal = modalId;
+        
+        if (modalId === 'rating') initRatingSystem();
+    }
+
+    function closeModal() {
+        document.getElementById('modal-backdrop').classList.remove('visible');
+        document.getElementById('modal-container').classList.remove('visible');
+        document.body.classList.remove('modal-open');
+        activeModal = null;
+    }
+
+    /* // --- Логика для системы оценки --- */
+    function initRatingSystem() {
+        const ratingForm = document.querySelector('.rating-form');
+        const ratingDisplay = document.getElementById('rating-display');
+        const ratings = [
+            {id: 1, name: "Ужасно"}, {id: 2, name: "Плохо"},
+            {id: 3, name: "Нормально"}, {id: 4, name: "Хорошо"},
+            {id: 5, name: "Отлично!"}
+        ];
+        
+        ratingForm.addEventListener('change', (e) => {
+            const ratingValue = +e.target.value;
+            const ratingObject = ratings.find(r => r.id === ratingValue);
+            ratingDisplay.textContent = ratingObject.name;
+        });
+    }
+/* serviceWorker */
+    if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('✅ Service Worker зарегистрирован:', reg))
+      .catch(err => console.error('❌ Ошибка регистрации Service Worker:', err));
+  });
+}
+
+    </script>
+</body>
+</html>
