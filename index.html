@@ -445,7 +445,7 @@
     /* // --- Основная логика приложения (без изменений) --- */
     async function initApp(){loadTheme();if(isMobile){document.addEventListener('click',handleGlobalClick,true)}try{const config=await apiCall('/api/config/video_dir');if(config?.video_dir){document.getElementById('dirInput').value=config.video_dir;await fetchAndDisplayContent()}await loadFavorites()}catch(error){console.error("Ошибка инициализации:",error);document.getElementById('file-list').innerHTML='<p>Не удалось подключиться к серверу. Убедитесь, что он запущен.</p>'}}
     let categoriesData={},favorites=[],expandedTag=null;
-    const API_BASE = "https://shoulder-around-communist-broader.trycloudflare.com/"
+    const API_BASE = "https://researchers-malpractice-origin-hosting.trycloudflare.com/"
     const nowPlayingEl=document.getElementById('now-playing');
     const categoryTagsContainer=document.getElementById('category-tags');
     const fileListContainer=document.getElementById('file-list');
